@@ -42,7 +42,7 @@ alter table public.profiles enable row level security;
 alter table public.help_requests enable row level security;
 alter table public.startup_pitches enable row level security;
 alter table public.saved_items enable row level security;
-create policy "Profiles visible to signed-in users" on public.profiles for select to authenticated using (true);
+create policy "Read own private profile" on public.profiles for select to authenticated using (id=auth.uid());
 create policy "Own profile insert" on public.profiles for insert to authenticated with check (id=auth.uid());
 create policy "Own profile update" on public.profiles for update to authenticated using (id=auth.uid()) with check (id=auth.uid());
 create policy "Approved requests or own drafts" on public.help_requests for select to anon,authenticated using (status='approved' or author_id=auth.uid());
