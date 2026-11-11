@@ -33,6 +33,14 @@ drop policy if exists "swipe_moderator_read_pitches" on public.startup_pitches;
 create policy "swipe_moderator_read_pitches" on public.startup_pitches
 for select to authenticated using ((select public.is_swipe_moderator()));
 
+-- Prevent authors from bypassing moderation by inserting pre-approved records.
+drop policy if exists "swipe_help_insert_pending_only" on public.help_requests;
+create policy "swipe_help_insert_pending_only" on public.help_requests
+as restrictive for insert to authenticated with check (status = 'pending' and author_id = (select auth.uid()));
+drop policy if exists "swipe_pitches_insert_pending_only" on public.startup_pitches;
+create policy "swipe_pitches_insert_pending_only" on public.startup_pitches
+as restrictive for insert to authenticated with check (status = 'pending' and founder_id = (select auth.uid()));
+
 -- Restrictive policies prevent nonmoderators from updating records,
 -- even if another permissive update policy exists.
 drop policy if exists "swipe_only_moderators_update_help" on public.help_requests;
