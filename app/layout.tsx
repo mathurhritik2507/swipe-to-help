@@ -1,4 +1,4 @@
 import type { Metadata } from 'next';
 import './globals.css';
-export const metadata: Metadata = { title: 'Swipe to Help — Discover help and ideas', description: 'Discover community assistance requests and startup ideas. Preview only: no payments or investments.' };
+export const metadata: Metadata = { title: 'Swipe to Help | One swipe can start something good', description: 'Discover assistance stories and startup ideas, create an account and submit ideas for review. Early-access preview; no financial transactions.', applicationName:'Swipe to Help', openGraph:{title:'Swipe to Help',description:'One swipe can start something good.',siteName:'Swipe to Help',url:'https://swipetohelp.app',type:'website'} };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="en"><body>{children}</body></html>; }
