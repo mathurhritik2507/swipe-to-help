@@ -46,3 +46,16 @@ The public prototype has account-backed features and a moderation workflow. **Th
 ## Contributing
 
 Please do not submit real bills, payment credentials, identity documents, or private financial information to GitHub issues.
+<!-- PORTFOLIO-REVIEW-NAV -->
+
+---
+
+### Portfolio review guide
+
+[← GitHub profile](https://github.com/mathurhritik2507) · [All projects](https://github.com/mathurhritik2507/data-science-portfolio) · [LinkedIn](https://www.linkedin.com/in/hritikmathur/)
+
+**Project status:** Prototype; public repository is not yet synchronized with the deployed application.
+
+**For technical reviewers:** Start with the problem statement, inspect the available source files and dependencies, then follow the documented setup and evaluation instructions. Results based on synthetic data, prototypes, or local demonstrations should not be interpreted as production impact.
+
+**Security:** Do not commit credentials, private datasets, personal information, or production secrets. Please report security issues privately rather than publishing exploit details.
