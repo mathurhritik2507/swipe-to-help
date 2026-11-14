@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function SiteFooter(){return <footer className="site-footer"><div className="site-footer-inner"><span>© 2026 Swipe to Help · Created by <a href="https://www.linkedin.com/in/hritikmathur/" target="_blank" rel="noopener noreferrer">Hritik Mathur</a></span><nav aria-label="Footer navigation"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav></div></footer>}
