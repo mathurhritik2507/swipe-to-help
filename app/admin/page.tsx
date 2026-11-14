@@ -7,6 +7,7 @@ export default function AdminPage(){
  const [entries,setEntries]=useState<Entry[]>([]);
  const [loading,setLoading]=useState(true),[allowed,setAllowed]=useState(false);
  const [message,setMessage]=useState(''),[busy,setBusy]=useState('');
+ const [filter,setFilter]=useState<'pending'|'approved'|'rejected'>('pending');
  async function refresh(){
   const client=supabase();
   const {data:{user}}=await client.auth.getUser();
@@ -15,7 +16,7 @@ export default function AdminPage(){
   if(checkError||isAdmin!==true){setAllowed(false);setLoading(false);return;}
   setAllowed(true);
   const [a,b]=await Promise.all([
-   client.from('help_requests').select('id,title,description,status,created_at').eq('status','pending').order('created_at',{ascending:true}).limit(100),
+   client.from('help_requests').select('id,title,description,status,created_at').eq('status',filter).order('created_at',{ascending:false}).limit(100),
    client.from('startup_pitches').select('id,name,summary,status,created_at').eq('status','pending').order('created_at',{ascending:true}).limit(100)
   ]);
   if(a.error||b.error)setMessage(a.error?.message||b.error?.message||'Unable to load queue');
@@ -25,16 +26,16 @@ export default function AdminPage(){
   ].sort((x,y)=>x.created_at.localeCompare(y.created_at)));
   setLoading(false);
  }
- useEffect(()=>{void refresh()},[]);
+ useEffect(()=>{void refresh()},[filter]);
  async function review(entry:Entry,status:'approved'|'rejected'){
-  if(!window.confirm(`Mark "${entry.title}" as ${status}?`))return;
+  if(!window.confirm(status==='rejected'&&entry.status==='approved'?`Unpublish "${entry.title}"? It will disappear from public discovery.`:`Mark "${entry.title}" as ${status}?`))return;
   setBusy(entry.id);setMessage('');
   try{
    const {data:{user}}=await supabase().auth.getUser();
    const {data:admin}=await supabase().rpc('is_swipe_moderator');
    if(!user||admin!==true)throw new Error('Moderator access required.');
    const table=entry.kind==='help'?'help_requests':'startup_pitches';
-   const {data,error}=await supabase().from(table).update({status}).eq('id',entry.id).eq('status','pending').select('id');
+   const {data,error}=await supabase().from(table).update({status}).eq('id',entry.id).eq('status',entry.status).select('id');
    if(error)throw error;
    if(!data?.length)throw new Error('The record was not updated. Refresh the queue.');
    setMessage(`Submission ${status}.`);await refresh();
@@ -42,5 +43,5 @@ export default function AdminPage(){
  }
  return <main className="shell"><header className="top"><Link className="brand" href="/">✳ Swipe to Help</Link><div className="header-links"><Link href="/dashboard">My dashboard</Link></div></header>
  <section className="hero compact"><div className="eyebrow">TRUST & SAFETY</div><h1>Moderation queue</h1><p className="muted">Only designated moderators can review submissions. Approving makes a submission eligible for public discovery.</p></section>
- {loading?<p>Checking moderator access…</p>:!allowed?<section className="panel"><h2>Access restricted</h2><p className="muted">This page is available only to authorized moderators. No submissions have been loaded.</p></section>:<section className="panel"><h2>Pending submissions ({entries.length})</h2>{message&&<p className="notice" role="status">{message}</p>}{entries.length===0?<p className="muted">No submissions awaiting review.</p>:entries.map(entry=><article className="submission" key={entry.kind+entry.id}><div className="eyebrow">{entry.kind==='help'?'Assistance request':'Startup pitch'}</div><h3>{entry.title}</h3><p className="muted" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{entry.description}</p><p className="muted">{new Date(entry.created_at).toLocaleString()}</p><div className="actions"><button disabled={!!busy} onClick={()=>review(entry,'approved')}>Approve</button><button className="secondary" disabled={!!busy} onClick={()=>review(entry,'rejected')}>Reject</button></div></article>)}</section>}</main>;
+ {loading?<p>Checking moderator access…</p>:!allowed?<section className="panel"><h2>Access restricted</h2><p className="muted">This page is available only to authorized moderators. No submissions have been loaded.</p></section>:<section className="panel"><div className="feature-grid" style={{marginBottom:20}}><div className="feature"><div className="eyebrow">MODERATION WORKSPACE</div><h2>Review and manage</h2><p className="muted">Approved listings can be unpublished immediately if they are misleading or no longer appropriate.</p></div></div><nav className="tabs" aria-label="Moderation filters"><button className={filter==='pending'?'active':''} onClick={()=>setFilter('pending')}>Pending</button><button className={filter==='approved'?'active':''} onClick={()=>setFilter('approved')}>Approved</button><button className={filter==='rejected'?'active':''} onClick={()=>setFilter('rejected')}>Rejected</button></nav><h2>{filter==='pending'?'Pending':filter==='approved'?'Approved':'Rejected'} submissions ({entries.length})</h2>{message&&<p className="notice" role="status">{message}</p>}{entries.length===0?<p className="muted">No submissions in this category.</p>:entries.map(entry=><article className="submission" key={entry.kind+entry.id}><div className="eyebrow">{entry.kind==='help'?'Assistance request':'Startup pitch'}</div><h3>{entry.title}</h3><p className="muted" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{entry.description}</p><p className="muted">{new Date(entry.created_at).toLocaleString()}</p><div className="actions">{filter!=='approved'&&<button disabled={!!busy} onClick={()=>review(entry,'approved')}>{filter==='rejected'?'Reapprove':'Approve'}</button>}{filter!=='rejected'&&<button className="secondary" disabled={!!busy} onClick={()=>review(entry,'rejected')}>{filter==='approved'?'Unpublish':'Reject'}</button>}</div></article>)}</section>}</main>;
 }
