@@ -1,0 +1,14 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {supabase} from '../lib/supabase';
+type Day={date:string;visitors:number;views:number};
+type Summary={accounts_total:number;accounts_7d:number;accounts_30d:number;visitors_today:number;visitors_7d:number;page_views_7d:number;daily:Day[]};
+export default function FounderAnalytics(){const [stats,setStats]=useState<Summary|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ async function load(){setBusy(true);setError('');try{const {data,error}=await supabase().rpc('founder_analytics_summary');if(error)throw error;setStats(data as Summary)}catch(e){setError(e instanceof Error?e.message:'Could not load analytics')}finally{setBusy(false)}}
+ useEffect(()=>{void load()},[]);
+ return <section className="panel" style={{marginTop:24}}><div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center',flexWrap:'wrap'}}><div><div className="eyebrow">FOUNDER INSIGHTS</div><h2>Website visitors & registrations</h2></div><button className="secondary" disabled={busy} onClick={()=>void load()}>{busy?'Loading…':'Refresh metrics'}</button></div>
+ <p className="muted">Private aggregate statistics. Visitors are estimated using anonymous browser sessions; numbers may include bots and your own testing. No individual browsing identities are collected.</p>
+ {error&&<p className="notice" role="status">Analytics not available: {error}. Apply the founder analytics SQL migration first.</p>}
+ {stats&&<><div className="feature-grid">{([{label:'Visitors today',value:stats.visitors_today},{label:'Visitors · 7 days',value:stats.visitors_7d},{label:'Page views · 7 days',value:stats.page_views_7d},{label:'Total registered accounts',value:stats.accounts_total},{label:'New accounts · 7 days',value:stats.accounts_7d},{label:'New accounts · 30 days',value:stats.accounts_30d}] as const).map(m=><div className="feature" key={m.label}><div className="eyebrow">{m.label}</div><h2 style={{fontSize:32,marginTop:8}}>{Number(m.value).toLocaleString()}</h2></div>)}</div><h3 style={{marginTop:24}}>Daily visits (last 14 days)</h3>{stats.daily.length?<div style={{overflowX:'auto'}}><table style={{width:'100%',textAlign:'left',borderCollapse:'collapse'}}><thead><tr><th>Date (UTC)</th><th>Estimated visitors</th><th>Page views</th></tr></thead><tbody>{stats.daily.map(d=><tr key={d.date}><td style={{padding:'10px 0'}}>{d.date}</td><td>{d.visitors}</td><td>{d.views}</td></tr>)}</tbody></table></div>:<p className="muted">No page-view data recorded yet. Visits will appear after deployment and successful tracking.</p>}</>}
+ <p className="muted" style={{marginTop:20}}>For registered user details, open Supabase → Authentication → Users. This dashboard deliberately shows totals, not private account emails.</p></section>;
+}
